@@ -4,7 +4,6 @@ import (
   "io/ioutil"
   "testing"
   "os"
-  "fmt"
 
   "gopkg.in/yaml.v2"
   "github.com/go-test/deep"
@@ -95,7 +94,6 @@ func TestConfigReadConfig( t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Printf("%s",yaml)
 	config,err = ReadConfig(testcfgfile)
 	if err != nil {
 		t.Errorf("Failed to read config file:%s\n", err)

@@ -1,4 +1,3 @@
-configfile: "/usr/local/etc/prom-export-mgr/config.yml"
 k8sdeploytemplatespath: "/usr/local/etc/prom-export-mgr/k8stemplates/"
 k8snamespace: monitoring
 services:
