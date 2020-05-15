@@ -1,0 +1,14 @@
+configfile: "/usr/local/etc/prom-export-mgr/config.yml"
+k8sdeploytemplatespath: "/usr/local/etc/prom-export-mgr/k8stemplates/"
+k8snamespace: monitoring
+services:
+  prom-export-apache:
+    srvtype: Ec2
+    srv:
+      tags:
+      - tag: tag1
+        value: value1
+      - tag: tag2
+        value: value2
+k8slabels:
+  manged: prom-export-mgr
