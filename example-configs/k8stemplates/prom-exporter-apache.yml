@@ -8,6 +8,7 @@ spec:
   selector:
     matchLabels:
       app: apache-exporter
+      manged: prom-export-mgr
   minReadySeconds: 10
   strategy:
     type: RollingUpdate

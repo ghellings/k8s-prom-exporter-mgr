@@ -4,6 +4,7 @@ import(
 	"testing"
 	"reflect"
 	"fmt"
+	"strings"
 
 	"github.com/go-test/deep"
 	"github.com/aws/aws-sdk-go/aws"
@@ -41,11 +42,11 @@ func TestEc2CreateEc2Filters (t *testing.T) {
 	}
 	filter := []*ec2.Filter{
 		{
-			Name: aws.String("tag1"),
+			Name: aws.String("tag:tag1"),
 			Values: []*string{aws.String("value1")},
 		},
 		{
-			Name: aws.String("tag2"),
+			Name: aws.String("tag:tag2"),
 			Values: []*string{aws.String("value2")},
 		},
 	}
@@ -93,7 +94,7 @@ func (m *mockEc2Client) DescribeInstances(d *ec2.DescribeInstancesInput) (*ec2.D
 					  	    Value: aws.String("TestInstance"),
 					  	  },
 					  	  {
-					  	    Key: aws.String("TestTag"),
+					  	    Key: aws.String("tag:TestTag"),
 					  	    Value: aws.String("TestValue"),
 					  	  },
 					  	},
@@ -107,7 +108,8 @@ func (m *mockEc2Client) DescribeInstances(d *ec2.DescribeInstancesInput) (*ec2.D
 	// Verify Tags match what we're planning on returning
 	var tags []Ec2Tag
 	for _,t := range m.Instances.Reservations[0].Instances[0].Tags {
-		tag  := Ec2Tag{Tag: *t.Key, Value: *t.Value}
+		key := strings.TrimPrefix(*t.Key,"tag:")
+		tag  := Ec2Tag{Tag: key, Value: *t.Value}
 		tags = append(tags,tag)
 	}
 	filters := CreateEc2Filters(&tags)

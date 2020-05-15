@@ -62,7 +62,7 @@ func CreateEc2Filters(e *[]Ec2Tag) []*ec2.Filter {
 	var ec2filters []*ec2.Filter
 	for _, f := range *e {
 		filter := &ec2.Filter{
-			Name: aws.String(f.Tag),
+			Name: aws.String("tag:"+f.Tag),
 			Values: []*string{aws.String(f.Value)},
 		}
 		ec2filters = append(ec2filters, filter)

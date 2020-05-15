@@ -112,7 +112,7 @@ func TestExporterMgrRun(t *testing.T) {
 						  	    Value: aws.String("TestInstance2"),
 						  	  },
 						  	  {
-						  	    Key: aws.String("TestTag"),
+						  	    Key: aws.String("tag:TestTag"),
 						  	    Value: aws.String("TestValue"),
 						  	  },
 						  	},
