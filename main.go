@@ -27,7 +27,7 @@ type loopinterface interface{
 	Run() error
 }
 
-func init() {
+func main() {
 	flag.BoolVar(&version, "version", false, "k8s-prom-exporter-mgr version")
 	flag.Int64Var(&sleeptime, "sleeptime", 1000, "Sleep time in loop")
 	flag.StringVar(&configfile, "configfile", "./k8s-prom-exporter-mgr.conf", "Full path to configfile")
@@ -54,11 +54,7 @@ func init() {
   	log.SetLevel(log.WarnLevel)
   case "error":
   	log.SetLevel(log.ErrorLevel)
-  }  	
-}
-
-func main() {
-	
+  } 
 	if version {
 		fmt.Printf("k8s-prom-exporter-mgr version %s\n", versioninfo)
 		return
