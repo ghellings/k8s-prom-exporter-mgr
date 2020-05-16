@@ -3,6 +3,7 @@ package exportermgr
 import (
   "fmt"
 
+  log "github.com/sirupsen/logrus"
   appsv1 "k8s.io/api/apps/v1"
   "github.com/mitchellh/mapstructure"
 )
@@ -70,26 +71,33 @@ func (e *ExporterMgr) Run() error {
 			return err
 		}
 		// Find things in a service like ec2 that need exporters
+		log.Debug("Fetching instances from service")
 		srvintances,err := srvinterface.Fetch()
 		if err != nil {
 			return err
 		}
+		log.Debug("Fetching deployments from kubernetes")
 		// Find exporters already in k8s
 		deploysrvinstances,err := e.k8s.Fetch()
 		if err != nil {
 			return err
 		}
 		// Join the above lists to figure out what needs to be removed or added
-		remove,add,_ := gregorianJoin(*deploysrvinstances,*srvintances)
-		if err != nil {
-			return err
+		log.Debug("Determining what should be added and what should be removed")
+		remove,add,ok := gregorianJoin(*deploysrvinstances,*srvintances)
+		for _,o := range ok {
+			deployment_name := fmt.Sprintf("%s-%s",servicename,o.Name)
+			log.Debugf("Found export: '%s' with match instance: '%s'",deployment_name,servicename)
 		}
 		// Remove exporters in k8s
 		for _,r := range remove {
-			err := e.k8s.Remove(r.Name)
+			deployment_name := fmt.Sprintf("%s-%s",servicename,r.Name)
+			log.Infof("Found exporter: '%s' without matching instance: '%s'",deployment_name,servicename)
+			err := e.k8s.Remove(deployment_name)
 			if err != nil {
 				return err
 			}
+			log.Warnf("Removed deployment: %s", deployment_name)
 		}
 		// Add exporters in k8s
 		path := e.K8sDeployTemplatesPath()
@@ -99,14 +107,16 @@ func (e *ExporterMgr) Run() error {
 			return err
 		}
 		for _,a := range add {
-			deployment_name := fmt.Sprintf("%s-%s",service,a.Name)
+			deployment_name := fmt.Sprintf("%s-%s",servicename,a.Name)
+			log.Infof("Found instance: '%s' for service: '%s' without exporter",a.Name,servicename)
 			deployment.ObjectMeta.Name = deployment_name
 			deployment_arg := fmt.Sprintf("http://%s:8080/server-status?auto",a.Addr)
 			deployment.Spec.Template.Spec.Containers[0].Args[1] = deployment_arg 
-			_,err = e.k8s.Create(deployment)
+			created,err := e.k8s.Create(deployment)
 			if err != nil {
 				return err
-			}	
+			}
+			log.Warnf("Created deployment: %s", created.ObjectMeta.Name)
 		}
 	}
 	return nil
@@ -134,5 +144,3 @@ func gregorianJoin(a []SrvInstance, b []SrvInstance) ([]SrvInstance,[]SrvInstanc
 	for k,_ := range j { aonly = append(aonly,k) }
 	return aonly,bonly,both
 }
-
-

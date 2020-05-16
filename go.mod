@@ -3,14 +3,24 @@ module github.com/ghellings/k8s-prom-exporter-mgr
 go 1.14
 
 require (
+	github.com/Masterminds/semver v1.5.0 // indirect
+	github.com/Masterminds/vcs v1.13.1 // indirect
+	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.30.22
+	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/evanphx/json-patch v4.5.0+incompatible // indirect
 	github.com/go-test/deep v1.0.6
+	github.com/golang/dep v0.5.4 // indirect
 	github.com/golang/protobuf v1.4.1 // indirect
 	github.com/googleapis/gnostic v0.4.0 // indirect
+	github.com/jmank88/nuts v0.4.0 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.3.0
+	github.com/nightlyone/lockfile v1.0.0 // indirect
+	github.com/pelletier/go-toml v1.7.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
+	github.com/sirupsen/logrus v1.6.0
 	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79 // indirect
 	golang.org/x/net v0.0.0-20200501053045-e0ff5e5a1de5 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect

@@ -2,13 +2,12 @@ apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   name: apache-exporter
-  namespace: monitoring
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: apache-exporter
-      manged: prom-export-mgr
+      managed: prom-exporter-mgr
   minReadySeconds: 10
   strategy:
     type: RollingUpdate
@@ -19,6 +18,7 @@ spec:
     metadata:
       labels:
         app: apache-exporter
+        managed: prom-exporter-mgr
       annotations:
         sumologic.com/format: "json_merge"
         sumologic.com/sourceCategory: "apache-exporter"

@@ -7,7 +7,11 @@ import (
 
   "gopkg.in/yaml.v2"
   "github.com/go-test/deep"
+  log "github.com/sirupsen/logrus"
+  
 )
+
+func init() {log.SetLevel(log.ErrorLevel)}
 
 func TestConfigSetConfigFile( t *testing.T ) {
 	config := Config{}

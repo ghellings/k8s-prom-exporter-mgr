@@ -7,7 +7,10 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	log "github.com/sirupsen/logrus"
 )
+
+func init() {log.SetLevel(log.ErrorLevel)}
 
 func TestExporterMgrSetK8s(t *testing.T){
 	mgr := New(Config{})

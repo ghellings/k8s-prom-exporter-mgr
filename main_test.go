@@ -3,7 +3,11 @@ package main
 import (
   "testing"
   "errors"
+
+  log "github.com/sirupsen/logrus"
 )
+
+func init() {log.SetLevel(log.ErrorLevel)}
 
 type MockLoopInterface struct{}
 

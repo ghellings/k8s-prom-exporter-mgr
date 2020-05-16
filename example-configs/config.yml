@@ -1,13 +1,11 @@
-k8sdeploytemplatespath: "/usr/local/etc/prom-export-mgr/k8stemplates/"
-k8snamespace: monitoring
+k8sdeploytemplatespath: "./example-configs/k8stemplates/"
+k8snamespace: default
 services:
-  prom-export-apache:
+  prom-exporter-apache:
     srvtype: Ec2
     srv:
       tags:
-      - tag: "Test1"
-        value: value1
-      - tag: "Test2"
-        value: value2
+      - tag: "Product"
+        value: "API"
 k8slabels:
-  manged: prom-export-mgr
+  manged: prom-exporter-mgr

@@ -45,21 +45,28 @@ func (k *K8s) K8sConfig() *rest.Config {
 // Connect
 func (k *K8s) Connect() (kubernetes.Interface, error) {
 	clientset := k.Client()
-	if clientset == nil {
-		config := k.K8sConfig()
-		if config == nil { 
-			config, err := rest.InClusterConfig()
-			if err != nil {
-				return nil,err
-			}
-			k.SetK8sConfig(config)
-		}
-		clientset, err := kubernetes.NewForConfig(config)
-		if err != nil {
-			return clientset, err
-		}
-		k.SetClient(clientset)
+	if clientset != nil {
+		return clientset, nil
 	}
+	config := k.K8sConfig()
+	if config == nil {
+		config, err := rest.InClusterConfig()
+		if err != nil {
+			return nil,err
+		}
+		if config == nil {
+			return nil, fmt.Errorf("'rest.InClusterConfig()' gave us nothing")
+		}
+		k.SetK8sConfig(config)
+	}
+	clientset, err := kubernetes.NewForConfig(k.K8sConfig())
+	if err != nil {
+		return nil, err
+	}
+	if clientset == nil {
+		return nil, fmt.Errorf("'kubernetes.NewForConfig()' gave us nothing")
+	}
+	k.SetClient(clientset)
 	return clientset, nil
 }
 // Fetch
@@ -68,7 +75,14 @@ func (k *K8s) Fetch() (*[]SrvInstance, error) {
 	if err != nil {
 		return nil, err
 	}
-	deploymentsClient := clientset.AppsV1().Deployments(k.K8sNamespace())
+	if clientset == nil {
+		return nil, fmt.Errorf("'Connect()' gave us nothing")
+	}
+	apps := clientset.AppsV1()
+	if apps == nil {
+		return nil, fmt.Errorf("'clientset.AppsV1()' didn't return anything")
+	}
+	deploymentsClient := apps.Deployments(k.K8sNamespace())
 	deploymentList, err := deploymentsClient.List(context.TODO(),metav1.ListOptions{
 		LabelSelector: labels.FormatLabels(*k.K8sLabels()),
 		Limit: 100,

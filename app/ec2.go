@@ -4,6 +4,7 @@ import(
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	log "github.com/sirupsen/logrus"
 )
 
 type Ec2 struct {
@@ -40,6 +41,7 @@ func (e *Ec2) Fetch() (*[]SrvInstance, error) {
 	params := &ec2.DescribeInstancesInput{
 		Filters: CreateEc2Filters(e.Tags),
 	}
+	log.Tracef("Looking for Ec2 instances with params: %#v", params)
 	instancesoutput, err := ec2client.DescribeInstances(params)
 	if err != nil {
 		return nil, err

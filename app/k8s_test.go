@@ -13,7 +13,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
+	log "github.com/sirupsen/logrus"
 )
+
+func init() {log.SetLevel(log.ErrorLevel)}
 
 func TestK8sSetClient(t *testing.T) {
 	k8s := K8s{
@@ -49,11 +52,21 @@ func TestK8sConnect(t *testing.T) {
 			K8snamespace: "default",
 		},
 	}
-	fakeclient := fake.NewSimpleClientset()
-	k8s.SetClient(fakeclient)
-	_,err := k8s.Connect()
-	if err != nil {
-		t.Errorf(err.Error())
+	// Test with real client and expect failure
+	{
+		_,err := k8s.Connect()
+		if err == nil {
+			t.Errorf("Expected failure from Connect() and didn't get it")
+		}
+	}
+	// Test with fake client and expect success
+	{
+		fakeclient := fake.NewSimpleClientset()
+		k8s.SetClient(fakeclient)
+		_,err := k8s.Connect()
+		if err != nil {
+			t.Errorf(err.Error())
+		}
 	}
 }
 
@@ -104,47 +117,75 @@ func TestK8sFetch(t *testing.T) {
 			},
 		},
 	}
-	fakeclient := fake.NewSimpleClientset(deployment)
-	k8s := K8s{
-		Config: &Config{
-			K8snamespace: "default",
-			K8slabels: &map[string]string{
-				"app": "prom-apache-exporter",
-			},
-		},
-		clientset: fakeclient,
-	}
-	srvinstances, err := k8s.Fetch()
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-	if length := len(*srvinstances); length != 1 {
-		t.Errorf("Expected one deployment got : %d\n", length)
-		return
-	}
-	if (*srvinstances)[0].Name != "prom-apache-exporter" {
-		t.Errorf("Expected deployment named 'prom-apache-exporter' got : %s", (*srvinstances)[0].Name)
-	}
-	// Test that we get nothing if the label doesn't match
-	fakeclient = fake.NewSimpleClientset(
-		&appsv1.Deployment{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "prom-apache-exporter",
-				Namespace: "default",
-				Labels: map[string]string{
-					"app": "not-prom-apache-exporter",
+	// Expect Connection failure
+	{
+			k8s := K8s{
+			Config: &Config{
+				K8snamespace: "default",
+				K8slabels: &map[string]string{
+					"app": "prom-apache-exporter",
 				},
 			},
-		},
-	)
-	k8s.SetClient(fakeclient)
-	srvinstances, err = k8s.Fetch()
-	if err != nil {
-		t.Errorf(err.Error())
+		}
+		_, err := k8s.Fetch()
+		if err == nil {
+			t.Errorf("Expected connection failure and didn't get it")
+		}
 	}
-	if length := len(*srvinstances); length != 0 {
-		t.Errorf("Expected zero deployment got : %d\n", length)
-		return
+	// Expect success
+	{
+		fakeclient := fake.NewSimpleClientset(deployment)
+		k8s := K8s{
+			Config: &Config{
+				K8snamespace: "default",
+				K8slabels: &map[string]string{
+					"app": "prom-apache-exporter",
+				},
+			},
+			clientset: fakeclient,
+		}
+		srvinstances, err := k8s.Fetch()
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if length := len(*srvinstances); length != 1 {
+			t.Errorf("Expected one deployment got : %d\n", length)
+			return
+		}
+		if (*srvinstances)[0].Name != "prom-apache-exporter" {
+			t.Errorf("Expected deployment named 'prom-apache-exporter' got : %s", (*srvinstances)[0].Name)
+		}
+	}
+	// Test that we get nothing if the label doesn't match
+	{
+		fakeclient := fake.NewSimpleClientset(
+			&appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "prom-apache-exporter",
+					Namespace: "default",
+					Labels: map[string]string{
+						"app": "not-prom-apache-exporter",
+					},
+				},
+			},
+		)
+		k8s := K8s{
+			Config: &Config{
+				K8snamespace: "default",
+				K8slabels: &map[string]string{
+					"app": "prom-apache-exporter",
+				},
+			},
+			clientset: fakeclient,
+		}
+		srvinstances, err := k8s.Fetch()
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		if length := len(*srvinstances); length != 0 {
+			t.Errorf("Expected zero deployment got : %d\n", length)
+			return
+		}
 	}
 }
 
