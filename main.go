@@ -32,7 +32,7 @@ func init() {
 	flag.Int64Var(&sleeptime, "sleeptime", 1000, "Sleep time in loop")
 	flag.StringVar(&configfile, "configfile", "./k8s-prom-exporter-mgr.conf", "Full path to configfile")
 	flag.BoolVar(&once, "once", false, "Run once")
-	flag.LogLevel(&loglevel, "loglevel", "info", "The level of log output (trace,debug,info,warn,error)")
+	flag.StringVar(&loglevel, "loglevel", "info", "The level of log output (trace,debug,info,warn,error)")
   flag.Parse()
   
   // Log as JSON instead of the default ASCII formatter.
@@ -44,21 +44,20 @@ func init() {
 
   // Only log the Info severity or above.
   switch loglevel {
-  case trace: 
+  case "trace": 
   	log.SetLevel(log.TraceLevel)
-  case debug:
+  case "debug":
   	log.SetLevel(log.DebugLevel)
-  case info:
+  case "info":
   	log.SetLevel(log.InfoLevel)
-  case warn:
+  case "warn":
   	log.SetLevel(log.WarnLevel)
-  case error:
+  case "error":
   	log.SetLevel(log.ErrorLevel)
   }  	
 }
 
 func main() {
-
 	
 	if version {
 		fmt.Printf("k8s-prom-exporter-mgr version %s\n", versioninfo)
