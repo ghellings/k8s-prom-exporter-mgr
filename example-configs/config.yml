@@ -1,4 +1,4 @@
-k8sdeploytemplatespath: "./example-configs/k8stemplates/"
+k8sdeploytemplatespath: "/etc/k8s-exporter-mgr/k8stemplates/"
 k8snamespace: default
 services:
   prom-exporter-apache:

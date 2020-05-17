@@ -30,7 +30,7 @@ type loopinterface interface{
 func main() {
 	flag.BoolVar(&version, "version", false, "k8s-prom-exporter-mgr version")
 	flag.Int64Var(&sleeptime, "sleeptime", 1000, "Sleep time in loop")
-	flag.StringVar(&configfile, "configfile", "./k8s-prom-exporter-mgr.conf", "Full path to configfile")
+	flag.StringVar(&configfile, "configfile", "/etc/k8s-prom-exporter-mgr/config.yml", "Full path to configfile")
 	flag.BoolVar(&once, "once", false, "Run once")
 	flag.StringVar(&loglevel, "loglevel", "info", "The level of log output (trace,debug,info,warn,error)")
   flag.Parse()
