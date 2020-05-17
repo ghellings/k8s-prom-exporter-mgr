@@ -134,42 +134,116 @@ func TestExporterMgrRun(t *testing.T) {
 }
 
 func TestExporterMgrgregorianJoin(t *testing.T){
-	a := []SrvInstance{
-		{
-			Name: "a",
-			Addr: "a",
-		},
-		{
-			Name: "b",
-			Addr: "b",
-		},
+	// Test for some aonly some bonly some both
+	{
+		a := []SrvInstance{
+			{
+				Name: "a",
+				Addr: "a",
+			},
+			{
+				Name: "b",
+				Addr: "b",
+			},
+			{
+				Name: "d",
+				Addr: "d",
+			},
+			{
+				Name: "e",
+				Addr: "e",
+			},
+			{
+				Name: "f",
+				Addr: "f",
+			},
+			{
+				Name: "g",
+				Addr: "g",
+			},				
+		}
+		b := []SrvInstance{
+			{
+				Name: "b",
+				Addr: "b",
+			},
+			{
+				Name: "c",
+				Addr: "c",
+			},
+		}
+		aonly,bonly,both := gregorianJoin(a,b)
+		if len(aonly) == 5 {
+			for _,l := range []string{"a","d","e","f","g"} {
+				Outter:
+				for {
+					for _,s := range aonly {
+						if l == s.Name { break Outter }
+					}
+					t.Errorf("Didn't find %s in aonly",l)
+				}
+			}
+		} else { t.Errorf("Expected 1 in aonly didn't get it: %#v", aonly) }
+		if len(bonly) == 1 {
+			if diff := deep.Equal(bonly[0],SrvInstance{ Name: "c", Addr: "c"}); diff != nil{
+				t.Errorf("Didn't get what we expected in bonly: %#v", diff)
+			}	
+		} else { t.Errorf("Expected 1 in bonly didn't get it: %#v", bonly) }
+		if len(both) == 1 {
+			if diff := deep.Equal(both[0],SrvInstance{ Name: "b", Addr: "b"}); diff != nil {
+				t.Errorf("Didn't get what we expected in bonly: %#v", diff)
+			}	
+		} else { t.Errorf("Expected 1 in both didn't get it: %#v", both) }
 	}
-	b := []SrvInstance{
-		{
-			Name: "b",
-			Addr: "b",
-		},
-		{
-			Name: "c",
-			Addr: "c",
-		},
-	}
-	aonly,bonly,both := gregorianJoin(a,b)
-	if len(aonly) == 1 {
-		if diff := deep.Equal(aonly[0],SrvInstance{ Name: "a", Addr: "a"}); diff != nil {
-			t.Errorf("Didn't get what we expected in aonly: %#v", diff)
-		}	
-	} else { t.Errorf("Expected 1 in aonly didn't get it: %#v", aonly) }
-	if len(bonly) == 1 {
-		if diff := deep.Equal(bonly[0],SrvInstance{ Name: "c", Addr: "c"}); diff != nil{
-			t.Errorf("Didn't get what we expected in bonly: %#v", diff)
-		}	
-	} else { t.Errorf("Expected 1 in bonly didn't get it: %#v", bonly) }
-	if len(both) == 1 {
-		if diff := deep.Equal(both[0],SrvInstance{ Name: "b", Addr: "b"}); diff != nil {
-			t.Errorf("Didn't get what we expected in bonly: %#v", diff)
-		}	
-	} else { t.Errorf("Expected 1 in both didn't get it: %#v", both) }
+	// Test for nothing in both
+	{
+		a := []SrvInstance{
+			{
+				Name: "a",
+				Addr: "a",
+			},
+			{
+				Name: "b",
+				Addr: "b",
+			},
+			{
+				Name: "c",
+				Addr: "c",
+			},
+			{
+				Name: "d",
+				Addr: "d",
+			},			
+		}
+		b := []SrvInstance{
+			{
+				Name: "a",
+				Addr: "a",
+			},
+			{
+				Name: "b",
+				Addr: "b",
+			},
+			{
+				Name: "c",
+				Addr: "c",
+			},
+			{
+				Name: "d",
+				Addr: "d",
+			},	
+		}
+		aonly,bonly,both := gregorianJoin(a,b)
+		if len(aonly) > 0 {
+			t.Errorf("Expected aonly to have 0 length: %#v", aonly)
+		}
+		if len(bonly) > 0 {
+			t.Errorf("Expected bonly to have 0 length: %#v", bonly)
+		} 
+		if diff := deep.Equal(both,a); diff != nil {
+				t.Errorf("Didn't get what we expected in bonly: %#v", diff)
+		} 
+	}	
 }
 
 // Fake K8s Client

@@ -338,54 +338,187 @@ func TestK8scfg2Object(t *testing.T) {
 }
 
 func TestK8sdeploymentList2SrvInstances(t *testing.T) {
-	deploylist := &appsv1.DeploymentList{
-		Items: []appsv1.Deployment{
-			{
-				ObjectMeta: metav1.ObjectMeta{Name:"Test"},
-				Spec: appsv1.DeploymentSpec{
-					Template: apiv1.PodTemplateSpec{
-						Spec: apiv1.PodSpec{
-							Containers: []apiv1.Container{
-								{
-									Args: []string{
-										"-scrape_uri",
-										"http://192.168.1.1:8080/server-status?auto",
+	// Should succeed
+	{
+		deploylist := &appsv1.DeploymentList{
+			Items: []appsv1.Deployment{
+				{
+					ObjectMeta: metav1.ObjectMeta{Name:"Test1"},
+					Spec: appsv1.DeploymentSpec{
+						Template: apiv1.PodTemplateSpec{
+							Spec: apiv1.PodSpec{
+								Containers: []apiv1.Container{
+									{
+										Args: []string{
+											"-scrape_uri",
+											"http://192.168.1.1:8080/server-status?auto",
+										},
 									},
 								},
 							},
 						},
-					},
-				}, 
+					}, 
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{Name:"Test2"},
+					Spec: appsv1.DeploymentSpec{
+						Template: apiv1.PodTemplateSpec{
+							Spec: apiv1.PodSpec{
+								Containers: []apiv1.Container{
+									{
+										Args: []string{
+											"-scrape_uri",
+											"http://192.168.1.2:8080/server-status?auto",
+										},
+									},
+								},
+							},
+						},
+					}, 
+				},			
 			},
-		},
+		}
+		srvinstances,err := deploymentList2SrvInstances(deploylist)
+		if err != nil {
+			t.Error(err)
+		}
+		testsrvinstances := &[]SrvInstance{
+			{
+				Name: "Test1",
+				Addr: "192.168.1.1",
+			},
+			{
+				Name: "Test2",
+				Addr: "192.168.1.2",
+			},
+		}
+		if diff := deep.Equal(srvinstances,testsrvinstances); diff != nil {
+			t.Errorf("Expected to get a &[]SrvInstance and didn't: %#v", srvinstances)
+		}
 	}
-	srvinstances,err := deploymentList2SrvInstances(deploylist)
-	if err != nil {
-		t.Error(err)
+	// Missing arg
+	{
+		deploylist := &appsv1.DeploymentList{
+			Items: []appsv1.Deployment{
+				{
+					ObjectMeta: metav1.ObjectMeta{Name:"Test1"},
+					Spec: appsv1.DeploymentSpec{
+						Template: apiv1.PodTemplateSpec{
+							Spec: apiv1.PodSpec{
+								Containers: []apiv1.Container{
+									{
+										Args: []string{
+											"-scrape_uri",
+										//	"http://192.168.1.1:8080/server-status?auto",
+										},
+									},
+								},
+							},
+						},
+					}, 
+				},
+			},
+		}
+		_,err := deploymentList2SrvInstances(deploylist)
+		if err == nil {
+			t.Error("Expected error due to missing second arg and didn't get it")
+		}
 	}
-	testsrvinstances := &[]SrvInstance{
-		{
-			Name: "Test",
-			Addr: "192.168.1.1",
-		},
+	// Missing name
+	{
+		deploylist := &appsv1.DeploymentList{
+			Items: []appsv1.Deployment{
+				{
+					ObjectMeta: metav1.ObjectMeta{Name:""},
+					Spec: appsv1.DeploymentSpec{
+						Template: apiv1.PodTemplateSpec{
+							Spec: apiv1.PodSpec{
+								Containers: []apiv1.Container{
+									{
+										Args: []string{
+											"-scrape_uri",
+											"http://192.168.1.1:8080/server-status?auto",
+										},
+									},
+								},
+							},
+						},
+					}, 
+				},
+			},
+		}
+		_,err := deploymentList2SrvInstances(deploylist)
+		if err == nil {
+			t.Error("Expected error due to missing deploy name and didn't get it")
+		}
 	}
-	if diff := deep.Equal(srvinstances,testsrvinstances); diff != nil {
-		t.Errorf("Expected to get a &[]SrvInstance and didn't: %#v", srvinstances)
+	// Unparsable arg
+	{
+		deploylist := &appsv1.DeploymentList{
+			Items: []appsv1.Deployment{
+				{
+					ObjectMeta: metav1.ObjectMeta{Name:""},
+					Spec: appsv1.DeploymentSpec{
+						Template: apiv1.PodTemplateSpec{
+							Spec: apiv1.PodSpec{
+								Containers: []apiv1.Container{
+									{
+										Args: []string{
+											"-scrape_uri",
+											"FOO",
+										},
+									},
+								},
+							},
+						},
+					}, 
+				},
+			},
+		}
+		_,err := deploymentList2SrvInstances(deploylist)
+		if err == nil {
+			t.Error("Expected error due to unparsable second arg and didn't get it")
+		}
 	}
 }
 
 func TestK8sstripArgs4Addr(t *testing.T) {
-	testargs := []string{
-		"-scrape_uri",
-		"http://192.168.1.1:8080/server-status?auto",
+	// Should succeed
+	{
+		testargs := []string{
+			"-scrape_uri",
+			"http://192.168.1.1:8080/server-status?auto",
+		}
+		addr,err := stripArgs4Addr(testargs)
+		if err != nil {
+			t.Error(err)
+		}
+		if addr != "192.168.1.1" {
+			t.Errorf("Expected to get '192.168.1.1' and got: %#v", addr)
+		}
 	}
-	addr,err := stripArgs4Addr(testargs)
-	if err != nil {
-		t.Error(err)
+	// Unparsable
+	{
+		testargs := []string{
+			"-scrape_uri",
+			"FOO",
+		}
+		_,err := stripArgs4Addr(testargs)
+		if err == nil {
+			t.Error("Expected error due to unparsable arg and didn't get it")
+		}
 	}
-	if addr != "192.168.1.1" {
-		t.Errorf("Expected to get '192.168.1.1' and got: %#v", addr)
+	// Missing arg
+	{
+		testargs := []string{
+			"-scrape_uri",
+		}
+		_,err := stripArgs4Addr(testargs)
+		if err == nil {
+			t.Error("Expected error due to missing arg and didn't get it")
+		}
 	}
+
 }
 
 func int32Ptr(i int32) *int32 { return &i }

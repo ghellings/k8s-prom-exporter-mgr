@@ -85,7 +85,6 @@ func (k *K8s) Fetch() (*[]SrvInstance, error) {
 	deploymentsClient := apps.Deployments(k.K8sNamespace())
 	deploymentList, err := deploymentsClient.List(context.TODO(),metav1.ListOptions{
 		LabelSelector: labels.FormatLabels(*k.K8sLabels()),
-		Limit: 100,
 	})
 	if err != nil {
 		return nil, err
