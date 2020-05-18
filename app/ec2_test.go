@@ -3,8 +3,8 @@ package exportermgr
 import(
 	"testing"
 	"reflect"
-	"fmt"
 	"strings"
+	// "fmt"
 
 	"github.com/go-test/deep"
 	"github.com/aws/aws-sdk-go/aws"
@@ -41,6 +41,10 @@ func TestEc2CreateEc2Filters (t *testing.T) {
 				Tag: "tag2",
 				Value: "value2",
 			},
+			{
+				Tag: "tag3",
+				Value: "value3",
+			},
 		},
 	}
 	filter := []*ec2.Filter{
@@ -52,8 +56,15 @@ func TestEc2CreateEc2Filters (t *testing.T) {
 			Name: aws.String("tag:tag2"),
 			Values: []*string{aws.String("value2")},
 		},
+		{
+			Name: aws.String("tag:tag3"),
+			Values: []*string{aws.String("value3")},
+		},		
 	}
 	result := CreateEc2Filters(ec2test.Tags)
+	if len(result) != 3 {
+		t.Errorf("Expected 3 results and didn't get it :%#v", result)
+	} 
 	if diff := deep.Equal(result,filter); diff != nil {
 		t.Errorf("Expected createEc2Filters() to return []*ec2.Filter and it didn't: %#v", diff)
 	}
@@ -63,11 +74,67 @@ func TestEc2Fetch (t *testing.T) {
 	ec2test := Ec2{
 		Tags: &[]Ec2Tag{
 			{
-				Tag: "TestTag",
-				Value: "TestValue",
+				Tag: "TestTag1",
+				Value: "TestValue1",
+			},
+			{
+				Tag: "TestTag2",
+				Value: "TestValue2",
+			},
+			{
+				Tag: "TestTag3",
+				Value: "TestValue3",
+			},						
+		},
+		ec2client: &mockEc2Client{
+			Instances: &ec2.DescribeInstancesOutput{
+				Reservations: []*ec2.Reservation{
+					{
+						Instances:  []*ec2.Instance{
+						 	{
+						  	PrivateIpAddress: aws.String("172.16.0.1"),
+						  	Tags: []*ec2.Tag{
+						  		{
+						  	    Key: aws.String("Name"),
+						  	    Value: aws.String("TestInstance1"),
+						  	  },
+						  	  {
+						  	    Key: aws.String("tag:TestTag1"),
+						  	    Value: aws.String("TestValue1"),
+						  	  },
+						  	},
+						  },
+						  {
+						  	PrivateIpAddress: aws.String("172.16.0.2"),
+						  	Tags: []*ec2.Tag{
+						  		{
+						  	    Key: aws.String("Name"),
+						  	    Value: aws.String("TestInstance2"),
+						  	  },
+						  	  {
+						  	    Key: aws.String("tag:TestTag2"),
+						  	    Value: aws.String("TestValue2"),
+						  	  },
+						  	},
+						  },
+						  {
+						  	PrivateIpAddress: aws.String("172.16.0.3"),
+						  	Tags: []*ec2.Tag{
+						  		{
+						  	    Key: aws.String("Name"),
+						  	    Value: aws.String("TestInstance3"),
+						  	  },
+						  	  {
+						  	    Key: aws.String("tag:TestTag3"),
+						  	    Value: aws.String("TestValue3"),
+						  	  },
+						  	},
+						  },
+						},
+					}, 
+				},
 			},
 		},
-		ec2client: &mockEc2Client{},
 	}
 	result,err := ec2test.Fetch()
 	if err != nil {
@@ -75,6 +142,9 @@ func TestEc2Fetch (t *testing.T) {
 	}
 	if o := reflect.TypeOf(result); o != reflect.TypeOf(&[]SrvInstance{}) {
 		t.Errorf("Expected to get a '*ec2.DescribeInstancesOutput' got: %s", o) 
+	}
+	if len(*result) != 3 {
+		t.Errorf("Expected to get 3 instances and didn't: %#v",result)
 	}
 }
 
@@ -110,10 +180,12 @@ func (m *mockEc2Client) DescribeInstances(d *ec2.DescribeInstancesInput) (*ec2.D
 
 	// Verify Tags match what we're planning on returning
 	var tags []Ec2Tag
-	for _,t := range m.Instances.Reservations[0].Instances[0].Tags {
-		key := strings.TrimPrefix(*t.Key,"tag:")
-		tag  := Ec2Tag{Tag: key, Value: *t.Value}
-		tags = append(tags,tag)
+	for _,i := range m.Instances.Reservations[0].Instances {
+		for _,t := range i.Tags {
+			key := strings.TrimPrefix(*t.Key,"tag:")
+			tag  := Ec2Tag{Tag: key, Value: *t.Value}
+			tags = append(tags,tag)
+		}
 	}
 	filters := CreateEc2Filters(&tags)
 	// Loop through array we created to ensure all items are found in what we're returning
@@ -123,8 +195,8 @@ func (m *mockEc2Client) DescribeInstances(d *ec2.DescribeInstancesInput) (*ec2.D
 				for _,f := range filters {
 					if d := deep.Equal(df,f); d == nil { break Found }
 				}
-				// Fake error that looks like Ec2 error
-				return nil,fmt.Errorf("InvalidParameterValue: The filter '%s' is invalid\t\tstatus code: 400, request id: Fake-Error-ID",df)
+				// Return nothing
+				return &ec2.DescribeInstancesOutput{},nil
 			}
 	}
 	return m.Instances,nil

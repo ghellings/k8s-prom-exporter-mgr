@@ -102,6 +102,6 @@ func loop(loop loopinterface) {
 			return
 		}
 		log.Debugf("Sleeping for %d seconds",sleeptime)
-		time.Sleep(time.Duration(sleeptime * int64(time.Millisecond)))
+		time.Sleep(time.Duration(sleeptime * int64(time.Second)))
 	}
 }

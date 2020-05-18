@@ -46,7 +46,7 @@ func (e *ExporterMgr) K8s() (k8sinterface) {
 	return e.k8s
 }
 // Turn config into serviceinterface
-func (e *ExporterMgr) mapSrv(s Service) (serviceinterface,error) {
+func (e *ExporterMgr) mapSrv(name string, s Service) (serviceinterface,error) {
 		switch s.SrvType {
 		case "Ec2":
 			var ec2 *Ec2
@@ -57,6 +57,7 @@ func (e *ExporterMgr) mapSrv(s Service) (serviceinterface,error) {
 			if ec2client := e.Ec2Client(); ec2client != nil {
 				ec2.SetEc2Client(ec2client)
 			}
+			ec2.SetName(name)
 			return ec2,err
 		default:
 			return nil,fmt.Errorf("No Service Type Set: %s", s.SrvType)
@@ -66,13 +67,13 @@ func (e *ExporterMgr) mapSrv(s Service) (serviceinterface,error) {
 func (e *ExporterMgr) Run() error {
 	// Loop through services defined in config
 	for servicename,service := range *e.SerVices() {
-		srvinterface,err := e.mapSrv(service)
+		srvinterface,err := e.mapSrv(servicename,service)
 		if err != nil {
 			return err
 		}
 		// Find things in a service like ec2 that need exporters
 		log.Debug("Fetching instances from service")
-		srvintances,err := srvinterface.Fetch()
+		srvinstances,err := srvinterface.Fetch()
 		if err != nil {
 			return err
 		}
@@ -84,20 +85,18 @@ func (e *ExporterMgr) Run() error {
 		}
 		// Join the above lists to figure out what needs to be removed or added
 		log.Debug("Determining what should be added and what should be removed")
-		remove,add,ok := gregorianJoin(*deploysrvinstances,*srvintances)
+		remove,add,ok := gregorianJoin(*deploysrvinstances,*srvinstances)
 		for _,o := range ok {
-			deployment_name := fmt.Sprintf("%s-%s",servicename,o.Name)
-			log.Debugf("Found export: '%s' with match instance: '%s'",deployment_name,servicename)
+			log.Debugf("Found export: '%s' with match instance: '%s'",o.Name,servicename)
 		}
 		// Remove exporters in k8s
 		for _,r := range remove {
-			deployment_name := fmt.Sprintf("%s-%s",servicename,r.Name)
-			log.Infof("Found exporter: '%s' without matching instance: '%s'",deployment_name,servicename)
-			err := e.k8s.Remove(deployment_name)
+			log.Infof("Found exporter: '%s' without matching instance: '%s'",r.Name,servicename)
+			err := e.k8s.Remove(r.Name)
 			if err != nil {
 				return err
 			}
-			log.Warnf("Removed deployment: %s", deployment_name)
+			log.Warnf("Removed deployment: %s", r.Name)
 		}
 		// Add exporters in k8s
 		path := e.K8sDeployTemplatesPath()
@@ -107,9 +106,8 @@ func (e *ExporterMgr) Run() error {
 			return err
 		}
 		for _,a := range add {
-			deployment_name := fmt.Sprintf("%s-%s",servicename,a.Name)
 			log.Infof("Found instance: '%s' for service: '%s' without exporter",a.Name,servicename)
-			deployment.ObjectMeta.Name = deployment_name
+			deployment.ObjectMeta.Name = a.Name
 			deployment_arg := fmt.Sprintf("http://%s:8080/server-status?auto",a.Addr)
 			deployment.Spec.Template.Spec.Containers[0].Args[1] = deployment_arg 
 			created,err := e.k8s.Create(deployment)
@@ -136,7 +134,7 @@ func gregorianJoin(a []SrvInstance, b []SrvInstance) ([]SrvInstance,[]SrvInstanc
 	aonly := []SrvInstance{}
 	bonly := []SrvInstance{}
 	both := []SrvInstance{}
-	for _, v := range a { j[v] = 1 }
+	for _,v := range a { j[v] = 1 }
 	for _,v := range b { 
 		if _,ok := j[v]; ok { delete(j,v); both = append(both,v) 
 		} else { bonly = append(bonly,v) } 

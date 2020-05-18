@@ -33,7 +33,7 @@ func TestExporterMgrmapSrv(t *testing.T){
 		},
 	}
 	mgr := New(Config{})
-	result,err := mgr.mapSrv(srv)
+	result,err := mgr.mapSrv("testservice",srv)
 	if err != nil {
 		t.Error(err)
 	}

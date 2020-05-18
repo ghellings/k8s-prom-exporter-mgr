@@ -1,4 +1,4 @@
-k8sdeploytemplatespath: "/etc/k8s-exporter-mgr/k8stemplates/"
+k8sdeploytemplatespath: "/etc/k8s-prom-exporter-mgr/k8stemplates/"
 k8snamespace: default
 services:
   prom-exporter-apache:
@@ -8,4 +8,4 @@ services:
       - tag: "Product"
         value: "API"
 k8slabels:
-  manged: prom-exporter-mgr
+  managed: prom-exporter-mgr

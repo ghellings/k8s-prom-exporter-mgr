@@ -1,6 +1,8 @@
 package exportermgr
 
 import(
+	"fmt"
+	
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -10,6 +12,7 @@ import(
 type Ec2 struct {
 	Tags *[]Ec2Tag
 	ec2client ec2clientinterface
+	name string
 }
 
 type Ec2Tag struct {
@@ -35,6 +38,15 @@ func (e *Ec2) Ec2Client() ec2clientinterface {
 	}
 	return e.ec2client
 }
+
+func(e *Ec2) SetName(name string) {
+	e.name = name
+}
+
+func(e *Ec2) Name() string {
+	return e.name
+}
+
 // Fetch
 func (e *Ec2) Fetch() (*[]SrvInstance, error) {
 	ec2client := e.Ec2Client()
@@ -50,7 +62,7 @@ func (e *Ec2) Fetch() (*[]SrvInstance, error) {
 	for _, r := range instancesoutput.Reservations {
 		for _, i := range r.Instances {
 			instance := SrvInstance{
-				Name: *i.PrivateIpAddress,
+				Name: fmt.Sprintf("%s-%s",e.Name(),*i.PrivateIpAddress),
 				Addr: *i.PrivateIpAddress,
 			}
 			srvinstances = append(srvinstances, instance)
