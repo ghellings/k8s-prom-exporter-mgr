@@ -30,6 +30,14 @@ func TestEc2SetEc2Client (t *testing.T) {
 
 }
 
+func TestEc2SetName ( t *testing.T) {
+	ec2test := Ec2{}
+	ec2test.SetName("Test1")
+	if ec2test.Name() != "Test1" {
+		t.Errorf("Expected Name to match 'Test1' and it didn't: %#v", ec2test.Name())
+	}
+}
+
 func TestEc2CreateEc2Filters (t *testing.T) {
 	ec2test := Ec2{
 		Tags: &[]Ec2Tag {

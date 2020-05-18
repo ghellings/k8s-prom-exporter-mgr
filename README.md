@@ -97,7 +97,7 @@ Install Docker for Desktop and enable Kubernetes. Export vars for AWS keys. Chec
 ```
 docker build . -t k8s-prom-exporter-mgr
 ```
-Follwed by
+Follwed by ( make sure your kubectl context is docker-desktop )
 ```
 kubectl run -i --tty k8s-prom-exporter-mgr --image=k8s-prom-exporter-mgr --restart=Never -n default --image-pull-policy=“Never” --env=AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --env=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY --env=AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION -- bash 
 ```
