@@ -12,6 +12,15 @@ import (
 
 func init() {log.SetLevel(log.ErrorLevel)}
 
+func TestExporterMgrSetEc2Client(t *testing.T){
+	mgr := ExporterMgr{}
+	mock2ec2 := &mockEc2Client{}
+	mgr.SetEc2Client(mock2ec2)
+	if diff := deep.Equal(mgr.Ec2Client(),mock2ec2); diff != nil {
+		t.Errorf("Expected Ec2Client to give back what it got and it didn't: %#v",mgr.Ec2Client())	
+	}
+}
+
 func TestExporterMgrSetK8s(t *testing.T){
 	mgr := New(Config{})
 	var mockk8s *mockK8s

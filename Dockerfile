@@ -10,7 +10,7 @@ RUN \
   CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/bin/k8s-prom-exporter-mgr
 
 # = TARGET: app =======================
-FROM golang:1.14.2
+FROM alpine
 WORKDIR /go/bin/
 ADD ./example-configs /etc/k8s-prom-exporter-mgr
 COPY --from=build-env /go/bin/k8s-prom-exporter-mgr . 

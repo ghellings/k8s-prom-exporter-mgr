@@ -59,13 +59,14 @@ func main() {
 		fmt.Printf("k8s-prom-exporter-mgr version %s\n", versioninfo)
 		return
 	}
-	config, err := exportermgr.ReadConfig(configfile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	exportermgr := exportermgr.New(config)
+
 	switch {
 	case once:
+		config, err := exportermgr.ReadConfig(configfile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		exportermgr := exportermgr.New(config)
 		log.Info("Run once and exit")
 		err := exportermgr.Run()
 		if err != nil {
@@ -73,7 +74,14 @@ func main() {
 		}
 		return
 	default:
-		loop(exportermgr)
+		for {
+			config, err := exportermgr.ReadConfig(configfile)
+			if err != nil {
+				log.Fatal(err)
+			}
+			exportermgr := exportermgr.New(config)
+			loop(exportermgr)
+		}
 	}
 }
 
