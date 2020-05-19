@@ -68,7 +68,7 @@ func main() {
 		}
 		exportermgr := exportermgr.New(config)
 		log.Info("Run once and exit")
-		err := exportermgr.Run()
+		err = exportermgr.Run()
 		if err != nil {
 			log.Error(err)
 		}
