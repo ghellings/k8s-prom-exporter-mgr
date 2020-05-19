@@ -1,7 +1,7 @@
 k8s-prom-exporter-mgr
 =====================
 
-This tool is for automatically managing prometheus exporters in kubernetes based on scraping data from APIs.  As an example, it will create exporters in kubernetes for a dynamic number of nodes in AWS based on Tags.
+This tool is for automatically managing prometheus exporters in kubernetes based on scraping data from APIs.  As an example, it will create exporters in kubernetes for a dynamic number of nodes in AWS based on Tags.  Currently the service only works with Ec2, but may support other services in the future.  Also, the service currently only supports in cluster kubernetes authentication, so the service needs to be run from within a kubernetes cluster.
 
 Usage
 =====

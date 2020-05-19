@@ -30,24 +30,45 @@ func TestExporterMgrSetK8s(t *testing.T){
 	}
 }
 func TestExporterMgrmapSrv(t *testing.T){
-	srv := Service{
-		SrvType: "Ec2",
-		Srv: &Ec2{
-			Tags: &[]Ec2Tag{
-				{
-					Tag: "TestTag",
-					Value: "TestValue",
+	// Should succeed
+	{
+		srv := Service{
+			SrvType: "Ec2",
+			Srv: &Ec2{
+				Tags: &[]Ec2Tag{
+					{
+						Tag: "TestTag",
+						Value: "TestValue",
+					},
 				},
 			},
-		},
+		}
+		mgr := New(Config{})
+		result,err := mgr.mapSrv("testservice",srv)
+		if err != nil {
+			t.Error(err)
+		}
+		if diff := deep.Equal(result,srv.Srv); diff != nil {
+			t.Errorf("Expected to get an Ec2{} and didn't: %s", diff)
+		}
 	}
-	mgr := New(Config{})
-	result,err := mgr.mapSrv("testservice",srv)
-	if err != nil {
-		t.Error(err)
+	// Bogus service should error
+	{
+		srv := Service{ SrvType: "Bogus", Srv: &[]string{} }
+		mgr := New(Config{})
+		_,err := mgr.mapSrv("bogus",srv)
+		if err == nil {
+			t.Errorf("Expected mapSrv with bogus service to error and it didn't")
+		}
 	}
-	if diff := deep.Equal(result,srv.Srv); diff != nil {
-		t.Errorf("Expected to get an Ec2{} and didn't: %s", diff)
+	// Bogus ec2 service
+	{
+		srv := Service{ SrvType: "Ec2", Srv: &[]string{} }
+		mgr := New(Config{})
+		_,err := mgr.mapSrv("bogus",srv)
+		if err == nil {
+			t.Errorf("Expected mapSrv with Ec2 bogus service to error and it didn't")
+		}	
 	}
 }
 func TestExporterMgrNew(t *testing.T) {
