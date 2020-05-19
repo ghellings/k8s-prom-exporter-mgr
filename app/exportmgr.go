@@ -109,7 +109,12 @@ func (e *ExporterMgr) Run() error {
 			log.Infof("Found instance: '%s' for service: '%s' without exporter",a.Name,servicename)
 			deployment.ObjectMeta.Name = a.Name
 			deployment_arg := fmt.Sprintf("http://%s:8080/server-status?auto",a.Addr)
-			deployment.Spec.Template.Spec.Containers[0].Args[1] = deployment_arg 
+			for _,c := range deployment.Spec.Template.Spec.Containers {
+				if len(c.Args) < 2 {
+					return fmt.Errorf("Expected k8s deploy template to have two ARGS and it did not")
+				}
+				c.Args[1] = deployment_arg 
+			}
 			created,err := e.k8s.Create(deployment)
 			if err != nil {
 				return err
