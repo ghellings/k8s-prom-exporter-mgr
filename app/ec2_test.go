@@ -67,10 +67,14 @@ func TestEc2CreateEc2Filters (t *testing.T) {
 		{
 			Name: aws.String("tag:tag3"),
 			Values: []*string{aws.String("value3")},
+		},
+		{
+			Name: aws.String("instance-state-name"),
+			Values: []*string{aws.String("running")},
 		},		
 	}
 	result := CreateEc2Filters(ec2test.Tags)
-	if len(result) != 3 {
+	if len(result) != 4 {
 		t.Errorf("Expected 3 results and didn't get it :%#v", result)
 	} 
 	if diff := deep.Equal(result,filter); diff != nil {

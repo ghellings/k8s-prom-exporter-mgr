@@ -78,8 +78,14 @@ func CreateEc2Filters(e *[]Ec2Tag) []*ec2.Filter {
 		filter := &ec2.Filter{
 			Name: aws.String("tag:"+f.Tag),
 			Values: []*string{aws.String(f.Value)},
+
 		}
 		ec2filters = append(ec2filters, filter)
 	}
+	// Add filter for only running instaces
+	ec2filters = append(ec2filters, &ec2.Filter{
+		Name: aws.String("instance-state-name"),
+		Values: []*string{aws.String("running")},
+	})
 	return ec2filters
 }
