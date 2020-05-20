@@ -2,6 +2,7 @@ package exportermgr
 
 import (
   "fmt"
+  "strings"
 
   log "github.com/sirupsen/logrus"
   appsv1 "k8s.io/api/apps/v1"
@@ -108,11 +109,15 @@ func (e *ExporterMgr) Run() error {
 		for _,a := range add {
 			log.Infof("Found instance: '%s' for service: '%s' without exporter",a.Name,servicename)
 			deployment.ObjectMeta.Name = a.Name
-			deployment_arg := fmt.Sprintf("http://%s:8080/server-status?auto",a.Addr)
 			for _,c := range deployment.Spec.Template.Spec.Containers {
 				if len(c.Args) < 2 {
 					return fmt.Errorf("Expected k8s deploy template to have two ARGS and it did not")
 				}
+				addr,err := stripArgs4Addr(c.Args)
+				if err != nil {
+					return err
+				}
+				deployment_arg := strings.Replace(c.Args[1],addr,a.Addr,1)
 				c.Args[1] = deployment_arg 
 			}
 			created,err := e.k8s.Create(deployment)
