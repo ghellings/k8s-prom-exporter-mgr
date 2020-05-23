@@ -18,7 +18,6 @@ require (
 	github.com/mitchellh/mapstructure v1.3.0
 	github.com/nightlyone/lockfile v1.0.0 // indirect
 	github.com/pelletier/go-toml v1.7.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sdboyer/constext v0.0.0-20170321163424-836a14457353 // indirect
 	github.com/sirupsen/logrus v1.6.0
 	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79 // indirect

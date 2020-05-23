@@ -1,22 +1,22 @@
 package exportermgr
 
 import (
-	"testing"
-	"os"
 	"io/ioutil"
+	"os"
+	"testing"
 
 	"github.com/go-test/deep"
-	"sigs.k8s.io/yaml"
+	log "github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
+	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-  apiv1 "k8s.io/api/core/v1"
-  appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
-	log "github.com/sirupsen/logrus"
+	"sigs.k8s.io/yaml"
 )
 
-func init() {log.SetLevel(log.ErrorLevel)}
+func init() { log.SetLevel(log.ErrorLevel) }
 
 func TestK8sSetClient(t *testing.T) {
 	k8s := K8s{
@@ -54,7 +54,7 @@ func TestK8sConnect(t *testing.T) {
 	}
 	// Test with real client and expect failure
 	{
-		_,err := k8s.Connect()
+		_, err := k8s.Connect()
 		if err == nil {
 			t.Errorf("Expected failure from Connect() and didn't get it")
 		}
@@ -63,7 +63,7 @@ func TestK8sConnect(t *testing.T) {
 	{
 		fakeclient := fake.NewSimpleClientset()
 		k8s.SetClient(fakeclient)
-		_,err := k8s.Connect()
+		_, err := k8s.Connect()
 		if err != nil {
 			t.Errorf(err.Error())
 		}
@@ -71,9 +71,9 @@ func TestK8sConnect(t *testing.T) {
 }
 
 func TestK8sFetch(t *testing.T) {
-		deployment := &appsv1.Deployment{
+	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "prom-apache-exporter",
+			Name:      "prom-apache-exporter",
 			Namespace: "default",
 			Labels: map[string]string{
 				"app": "prom-apache-exporter",
@@ -102,7 +102,7 @@ func TestK8sFetch(t *testing.T) {
 							},
 							Args: []string{
 								"-scrape_uri",
-          			"http://10.0.2.85:8080/server-status?auto",
+								"http://10.0.2.85:8080/server-status?auto",
 							},
 							Ports: []apiv1.ContainerPort{
 								{
@@ -119,10 +119,10 @@ func TestK8sFetch(t *testing.T) {
 	}
 	// Expect Connection failure
 	{
-			k8s := K8s{
+		k8s := K8s{
 			Config: &Config{
 				K8snamespace: "default",
-				K8slabels: &map[string]string{
+				K8slabels: map[string]string{
 					"app": "prom-apache-exporter",
 				},
 			},
@@ -138,7 +138,7 @@ func TestK8sFetch(t *testing.T) {
 		k8s := K8s{
 			Config: &Config{
 				K8snamespace: "default",
-				K8slabels: &map[string]string{
+				K8slabels: map[string]string{
 					"app": "prom-apache-exporter",
 				},
 			},
@@ -161,7 +161,7 @@ func TestK8sFetch(t *testing.T) {
 		fakeclient := fake.NewSimpleClientset(
 			&appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "prom-apache-exporter",
+					Name:      "prom-apache-exporter",
 					Namespace: "default",
 					Labels: map[string]string{
 						"app": "not-prom-apache-exporter",
@@ -172,7 +172,7 @@ func TestK8sFetch(t *testing.T) {
 		k8s := K8s{
 			Config: &Config{
 				K8snamespace: "default",
-				K8slabels: &map[string]string{
+				K8slabels: map[string]string{
 					"app": "prom-apache-exporter",
 				},
 			},
@@ -197,10 +197,10 @@ func TestK8sRemove(t *testing.T) {
 	}
 	fakeclient := fake.NewSimpleClientset(
 		&appsv1.Deployment{
-    	ObjectMeta: metav1.ObjectMeta{
-        Name:        "prom-apache-exporter",
-        Namespace:   "default",
-        Labels: map[string]string{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "prom-apache-exporter",
+				Namespace: "default",
+				Labels: map[string]string{
 					"app": "prom-apache-exporter",
 				},
 			},
@@ -217,7 +217,7 @@ func TestK8sCreate(t *testing.T) {
 	k8s := K8s{
 		Config: &Config{
 			K8snamespace: "default",
-			K8slabels: &map[string]string{
+			K8slabels: map[string]string{
 				"app": "prom-apache-exporter",
 			},
 		},
@@ -226,7 +226,7 @@ func TestK8sCreate(t *testing.T) {
 	k8s.SetClient(fakeclient)
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "prom-apache-exporter",
+			Name:      "prom-apache-exporter",
 			Namespace: "default",
 			Labels: map[string]string{
 				"app": "prom-apache-exporter",
@@ -268,14 +268,14 @@ func TestK8sCreate(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 	if diff := deep.Equal(checkdeployment, deployment); diff != nil {
-		t.Errorf("Expected to get 'deplyment' back and didn't: %s", diff )
+		t.Errorf("Expected to get 'deplyment' back and didn't: %s", diff)
 	}
 }
 
 func TestK8scfg2Object(t *testing.T) {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "prom-apache-exporter",
+			Name:      "prom-apache-exporter",
 			Namespace: "default",
 			Labels: map[string]string{
 				"app": "prom-apache-exporter",
@@ -313,16 +313,16 @@ func TestK8scfg2Object(t *testing.T) {
 		},
 	}
 	// Mock a config file for testing
-	testpath, err := ioutil.TempDir("","exportmgr")
+	testpath, err := ioutil.TempDir("", "exportmgr")
 	if err != nil {
 		t.Error(err)
 	}
-	testcfgfile := testpath+"/prom-apache-exporter.yml"
+	testcfgfile := testpath + "/prom-apache-exporter.yml"
 	defer os.RemoveAll(testpath)
-	yaml,err := yaml.Marshal(deployment)
+	yaml, err := yaml.Marshal(deployment)
 	if err != nil {
 		t.Error(err)
-	}	
+	}
 	err = ioutil.WriteFile(testcfgfile, yaml, 0644)
 	if err != nil {
 		t.Error(err)
@@ -333,7 +333,7 @@ func TestK8scfg2Object(t *testing.T) {
 	}
 	if cfgobj.ObjectMeta.Name != deployment.ObjectMeta.Name {
 		t.Errorf("Expected Cfg2Object to return object the same as 'deployment' and it didn't: %#v", cfgobj)
-	} 
+	}
 
 }
 
@@ -343,7 +343,7 @@ func TestK8sdeploymentList2SrvInstances(t *testing.T) {
 		deploylist := &appsv1.DeploymentList{
 			Items: []appsv1.Deployment{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name:"Test1"},
+					ObjectMeta: metav1.ObjectMeta{Name: "Test1"},
 					Spec: appsv1.DeploymentSpec{
 						Template: apiv1.PodTemplateSpec{
 							Spec: apiv1.PodSpec{
@@ -357,10 +357,10 @@ func TestK8sdeploymentList2SrvInstances(t *testing.T) {
 								},
 							},
 						},
-					}, 
+					},
 				},
 				{
-					ObjectMeta: metav1.ObjectMeta{Name:"Test2"},
+					ObjectMeta: metav1.ObjectMeta{Name: "Test2"},
 					Spec: appsv1.DeploymentSpec{
 						Template: apiv1.PodTemplateSpec{
 							Spec: apiv1.PodSpec{
@@ -374,11 +374,11 @@ func TestK8sdeploymentList2SrvInstances(t *testing.T) {
 								},
 							},
 						},
-					}, 
-				},			
+					},
+				},
 			},
 		}
-		srvinstances,err := deploymentList2SrvInstances(deploylist)
+		srvinstances, err := deploymentList2SrvInstances(deploylist)
 		if err != nil {
 			t.Error(err)
 		}
@@ -392,7 +392,7 @@ func TestK8sdeploymentList2SrvInstances(t *testing.T) {
 				Addr: "192.168.1.2",
 			},
 		}
-		if diff := deep.Equal(srvinstances,testsrvinstances); diff != nil {
+		if diff := deep.Equal(srvinstances, testsrvinstances); diff != nil {
 			t.Errorf("Expected to get a &[]SrvInstance and didn't: %#v", srvinstances)
 		}
 	}
@@ -401,7 +401,7 @@ func TestK8sdeploymentList2SrvInstances(t *testing.T) {
 		deploylist := &appsv1.DeploymentList{
 			Items: []appsv1.Deployment{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name:"Test1"},
+					ObjectMeta: metav1.ObjectMeta{Name: "Test1"},
 					Spec: appsv1.DeploymentSpec{
 						Template: apiv1.PodTemplateSpec{
 							Spec: apiv1.PodSpec{
@@ -409,17 +409,17 @@ func TestK8sdeploymentList2SrvInstances(t *testing.T) {
 									{
 										Args: []string{
 											"-scrape_uri",
-										//	"http://192.168.1.1:8080/server-status?auto",
+											//	"http://192.168.1.1:8080/server-status?auto",
 										},
 									},
 								},
 							},
 						},
-					}, 
+					},
 				},
 			},
 		}
-		_,err := deploymentList2SrvInstances(deploylist)
+		_, err := deploymentList2SrvInstances(deploylist)
 		if err == nil {
 			t.Error("Expected error due to missing second arg and didn't get it")
 		}
@@ -429,7 +429,7 @@ func TestK8sdeploymentList2SrvInstances(t *testing.T) {
 		deploylist := &appsv1.DeploymentList{
 			Items: []appsv1.Deployment{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name:""},
+					ObjectMeta: metav1.ObjectMeta{Name: ""},
 					Spec: appsv1.DeploymentSpec{
 						Template: apiv1.PodTemplateSpec{
 							Spec: apiv1.PodSpec{
@@ -443,11 +443,11 @@ func TestK8sdeploymentList2SrvInstances(t *testing.T) {
 								},
 							},
 						},
-					}, 
+					},
 				},
 			},
 		}
-		_,err := deploymentList2SrvInstances(deploylist)
+		_, err := deploymentList2SrvInstances(deploylist)
 		if err == nil {
 			t.Error("Expected error due to missing deploy name and didn't get it")
 		}
@@ -457,7 +457,7 @@ func TestK8sdeploymentList2SrvInstances(t *testing.T) {
 		deploylist := &appsv1.DeploymentList{
 			Items: []appsv1.Deployment{
 				{
-					ObjectMeta: metav1.ObjectMeta{Name:""},
+					ObjectMeta: metav1.ObjectMeta{Name: ""},
 					Spec: appsv1.DeploymentSpec{
 						Template: apiv1.PodTemplateSpec{
 							Spec: apiv1.PodSpec{
@@ -471,11 +471,11 @@ func TestK8sdeploymentList2SrvInstances(t *testing.T) {
 								},
 							},
 						},
-					}, 
+					},
 				},
 			},
 		}
-		_,err := deploymentList2SrvInstances(deploylist)
+		_, err := deploymentList2SrvInstances(deploylist)
 		if err == nil {
 			t.Error("Expected error due to unparsable second arg and didn't get it")
 		}
@@ -489,7 +489,7 @@ func TestK8sstripArgs4Addr(t *testing.T) {
 			"-scrape_uri",
 			"http://192.168.1.1:8080/server-status?auto",
 		}
-		addr,err := stripArgs4Addr(testargs)
+		addr, err := stripArgs4Addr(testargs)
 		if err != nil {
 			t.Error(err)
 		}
@@ -503,7 +503,7 @@ func TestK8sstripArgs4Addr(t *testing.T) {
 			"-scrape_uri",
 			"FOO",
 		}
-		_,err := stripArgs4Addr(testargs)
+		_, err := stripArgs4Addr(testargs)
 		if err == nil {
 			t.Error("Expected error due to unparsable arg and didn't get it")
 		}
@@ -513,7 +513,7 @@ func TestK8sstripArgs4Addr(t *testing.T) {
 		testargs := []string{
 			"-scrape_uri",
 		}
-		_,err := stripArgs4Addr(testargs)
+		_, err := stripArgs4Addr(testargs)
 		if err == nil {
 			t.Error("Expected error due to missing arg and didn't get it")
 		}

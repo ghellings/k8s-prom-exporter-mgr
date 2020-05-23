@@ -1,8 +1,8 @@
 package exportermgr
 
-import(
+import (
 	"fmt"
-	
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -10,14 +10,14 @@ import(
 )
 
 type Ec2 struct {
-	Tags *[]Ec2Tag
+	Tags      *[]Ec2Tag
 	ec2client ec2clientinterface
-	name string
+	name      string
 }
 
 type Ec2Tag struct {
-	Tag string
-	Value string 
+	Tag   string
+	Value string
 }
 
 type ec2clientinterface interface {
@@ -31,7 +31,7 @@ func (e *Ec2) SetEc2Client(ec2client ec2clientinterface) {
 func (e *Ec2) Ec2Client() ec2clientinterface {
 	if e.ec2client == nil {
 		sess := session.Must(session.NewSessionWithOptions(session.Options{
-	  	SharedConfigState: session.SharedConfigEnable,
+			SharedConfigState: session.SharedConfigEnable,
 		}))
 		ec2client := ec2.New(sess)
 		e.SetEc2Client(ec2client)
@@ -39,11 +39,11 @@ func (e *Ec2) Ec2Client() ec2clientinterface {
 	return e.ec2client
 }
 
-func(e *Ec2) SetName(name string) {
+func (e *Ec2) SetName(name string) {
 	e.name = name
 }
 
-func(e *Ec2) Name() string {
+func (e *Ec2) Name() string {
 	return e.name
 }
 
@@ -62,13 +62,13 @@ func (e *Ec2) Fetch() (*[]SrvInstance, error) {
 	for _, r := range instancesoutput.Reservations {
 		for _, i := range r.Instances {
 			instance := SrvInstance{
-				Name: fmt.Sprintf("%s-%s",e.Name(),*i.PrivateIpAddress),
+				Name: fmt.Sprintf("%s-%s", e.Name(), *i.PrivateIpAddress),
 				Addr: *i.PrivateIpAddress,
 			}
 			srvinstances = append(srvinstances, instance)
 		}
 	}
-	return &srvinstances,err
+	return &srvinstances, err
 }
 
 //  Create filters Ec2 client wants for describing instances
@@ -76,15 +76,14 @@ func CreateEc2Filters(e *[]Ec2Tag) []*ec2.Filter {
 	var ec2filters []*ec2.Filter
 	for _, f := range *e {
 		filter := &ec2.Filter{
-			Name: aws.String("tag:"+f.Tag),
+			Name:   aws.String("tag:" + f.Tag),
 			Values: []*string{aws.String(f.Value)},
-
 		}
 		ec2filters = append(ec2filters, filter)
 	}
 	// Add filter for only running instaces
 	ec2filters = append(ec2filters, &ec2.Filter{
-		Name: aws.String("instance-state-name"),
+		Name:   aws.String("instance-state-name"),
 		Values: []*string{aws.String("running")},
 	})
 	return ec2filters
