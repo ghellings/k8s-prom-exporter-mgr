@@ -1,23 +1,22 @@
 package main
 
 import (
-  "testing"
-  "errors"
+	"errors"
+	"testing"
 
-  log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
-func init() {log.SetLevel(log.ErrorLevel)}
+func init() { log.SetLevel(log.ErrorLevel) }
 
 type MockLoopInterface struct{}
 
-func (l MockLoopInterface ) Run() error {
+func (l MockLoopInterface) Run() error {
 	return errors.New("1")
 }
 
 // Test Loop Failure
-func TestLoopFailure( t *testing.T) {
+func TestLoopFailure(t *testing.T) {
 	mockLoop := MockLoopInterface{}
 	loop(mockLoop)
 }
-
